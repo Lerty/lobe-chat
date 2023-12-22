@@ -134,7 +134,7 @@ class ChatService {
       return [
         { text: m.content, type: 'text' },
         ...imageList.map(
-          (i) => ({ image_url: { detail: 'auto', url: i.url }, type: 'image_url' }) as const,
+          (i) => ({ image_url: { detail: 'high', url: i.url }, type: 'image_url' }) as const,
         ),
       ] as UserMessageContentPart[];
     };
