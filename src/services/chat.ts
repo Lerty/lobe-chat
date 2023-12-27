@@ -6,14 +6,14 @@ import { VISION_MODEL_WHITE_LIST } from '@/const/llm';
 import { DEFAULT_AGENT_CONFIG } from '@/const/settings';
 import { filesSelectors, useFileStore } from '@/store/file';
 import { useToolStore } from '@/store/tool';
-import { pluginSelectors } from '@/store/tool/selectors';
-import { ChatMessage } from '@/types/chatMessage';
+import { pluginSelectors, toolSelectors } from '@/store/tool/selectors';
+import { ChatMessage } from '@/types/message';
 import type { OpenAIChatMessage, OpenAIChatStreamPayload } from '@/types/openai/chat';
 import { UserMessageContentPart } from '@/types/openai/chat';
 import { fetchAIFactory, getMessageError } from '@/utils/fetch';
 
 import { createHeaderWithOpenAI } from './_header';
-import { OPENAI_URLS, URLS } from './_url';
+import { OPENAI_URLS, PLUGINS_URLS } from './_url';
 
 const isVisionModel = (model?: string) => model && VISION_MODEL_WHITE_LIST.includes(model);
 
@@ -48,17 +48,16 @@ class ChatService {
 
     // ============  2. preprocess tools   ============ //
 
-    const filterTools = pluginSelectors.enabledSchema(enabledPlugins)(useToolStore.getState());
+    const filterTools = toolSelectors.enabledSchema(enabledPlugins)(useToolStore.getState());
 
     // the rule that model can use tools:
     // 1. tools is not empty
     // 2. model is not in vision white list, because vision model can't use tools
     // TODO: we need to find some method to let vision model use tools
     const shouldUseTools = filterTools.length > 0 && !isVisionModel(payload.model);
+    const tools = shouldUseTools ? filterTools : undefined;
 
-    const functions = shouldUseTools ? filterTools : undefined;
-
-    return this.getChatCompletion({ ...params, functions, messages: oaiMessages }, options);
+    return this.getChatCompletion({ ...params, messages: oaiMessages, tools }, options);
   };
 
   getChatCompletion = (params: Partial<OpenAIChatStreamPayload>, options?: FetchOptions) => {
@@ -92,7 +91,7 @@ class ChatService {
 
     const gatewayURL = manifest?.gateway;
 
-    const res = await fetch(gatewayURL ?? URLS.plugins, {
+    const res = await fetch(gatewayURL ?? PLUGINS_URLS.gateway, {
       body: JSON.stringify({ ...params, manifest }),
       headers: createHeadersWithPluginSettings(settings),
       method: 'POST',
@@ -161,9 +160,7 @@ class ChatService {
 
       const systemMessage = draft.find((i) => i.role === 'system');
 
-      const toolsSystemRoles = pluginSelectors.enabledPluginsSystemRoles(tools)(
-        useToolStore.getState(),
-      );
+      const toolsSystemRoles = toolSelectors.enabledSystemRoles(tools)(useToolStore.getState());
 
       if (!toolsSystemRoles) return;
 
