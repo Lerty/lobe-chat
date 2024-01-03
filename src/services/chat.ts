@@ -39,10 +39,10 @@ class ChatService {
     const payload = merge(
       {
         enhancements: {
-          ocr: {
+          grounding: {
             enabled: true,
           },
-          grounding: {
+          ocr: {
             enabled: true,
           },
         },
