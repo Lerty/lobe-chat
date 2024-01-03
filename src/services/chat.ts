@@ -28,8 +28,24 @@ class ChatService {
     { plugins: enabledPlugins, messages, ...params }: GetChatCompletionPayload,
     options?: FetchOptions,
   ) => {
+    // const payload = merge(
+    //   {
+    //     model: DEFAULT_AGENT_CONFIG.model,
+    //     stream: true,
+    //     ...DEFAULT_AGENT_CONFIG.params,
+    //   },
+    //   params,
+    // );
     const payload = merge(
       {
+        enhancements: {
+          ocr: {
+            enabled: true,
+          },
+          grounding: {
+            enabled: true,
+          },
+        },
         model: DEFAULT_AGENT_CONFIG.model,
         stream: true,
         ...DEFAULT_AGENT_CONFIG.params,
