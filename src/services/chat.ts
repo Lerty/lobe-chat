@@ -30,6 +30,14 @@ class ChatService {
   ) => {
     const payload = merge(
       {
+        enhancements: {
+          grounding: {
+            enabled: true,
+          },
+          ocr: {
+            enabled: true,
+          },
+        },
         model: DEFAULT_AGENT_CONFIG.model,
         stream: true,
         ...DEFAULT_AGENT_CONFIG.params,
